@@ -1,3 +1,8 @@
+all: clean pull
+
+.PHONY: clean
+clean:
+	rm -rf tree-sitter-reason/*
 
 .PHONY: pull
 pull:
@@ -5,5 +10,5 @@ pull:
 	    echo "Environment variable TS_REASON_DIR not set"; \
 	    exit 1; \
 	fi
-	cp -R ${TS_REASON_DIR}/{binding.gyp,Cargo.toml,grammar.js,bindings/,src/} tree-sitter-reason/
+	cp -R ${TS_REASON_DIR}/{binding.gyp,Cargo.toml,grammar.js,bindings,src} tree-sitter-reason/
 	# cp ${TS_REASON_DIR}/queries/* queries/reason/
