@@ -11,4 +11,4 @@ pull:
 	    exit 1; \
 	fi
 	cp -R ${TS_REASON_DIR}/{binding.gyp,Cargo.toml,grammar.js,bindings,src} tree-sitter-reason/
-	# cp ${TS_REASON_DIR}/queries/* queries/reason/
+	cp ${TS_REASON_DIR}/queries/* queries/reason/
