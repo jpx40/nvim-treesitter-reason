@@ -6,7 +6,8 @@ module.exports = grammar({
     $.comment,
     $._newline_and_comment,
     '"',
-    "`",
+    '|js}',
+    '{js|',
     $._template_chars,
     $._lparen,
     $._rparen,
@@ -120,7 +121,6 @@ module.exports = grammar({
 
     statement: $ => choice(
       alias($._decorated_statement, $.decorated),
-      $.decorator_statement,
       $.expression_statement,
       $.declaration,
       $.open_statement,
@@ -132,11 +132,6 @@ module.exports = grammar({
       $.declaration,
     ),
 
-    decorator_statement: $ => seq(
-      '@@',
-      $.decorator_identifier,
-      optional($.decorator_arguments)
-    ),
 
     block: $ => prec.right(seq(
       '{',
@@ -256,14 +251,14 @@ module.exports = grammar({
     ),
 
     type_parameters: $ => seq(
-      '<',
+      '(',
       commaSep1t(
         seq(
           optional(choice('+', '-')),
           $.type_identifier
         )
       ),
-      '>',
+      ')',
     ),
 
     type_annotation: $ => seq(
@@ -395,9 +390,9 @@ module.exports = grammar({
     ),
 
     type_arguments: $ => seq(
-      '<',
+      '(',
       commaSep1t($._type),
-      '>'
+      ')'
     ),
 
     function_type: $ => prec.left(seq(
@@ -427,8 +422,10 @@ module.exports = grammar({
       ),
     ),
 
+    let_custom: $ => seq('let.', $.value_identifier),
+
     let_binding: $ => seq(
-      choice('export', 'let'),
+      choice('export', 'let', $.let_custom),
       optional('rec'),
       $._let_binding,
     ),
@@ -690,7 +687,7 @@ module.exports = grammar({
     ),
 
     polyvar_type_pattern: $ => seq(
-      '#',
+      '`',
       '...',
       $._type_identifier,
     ),
@@ -1038,11 +1035,7 @@ module.exports = grammar({
       ']'
     ),
 
-    decorator_arguments: $ => seq(
-      '(',
-      commaSept($.expression),
-      ')',
-    ),
+    decorator_arguments: $ => choice($.string, $.tuple, $.value_identifier),
 
     subscript_expression: $ => prec.right('member', seq(
       field('object', $.primary_expression),
@@ -1304,7 +1297,7 @@ module.exports = grammar({
     variant_identifier: $ => /[A-Z][a-zA-Z0-9_]*/,
 
     polyvar_identifier: $ => seq(
-      '#',
+      '`',
       choice(
         /[a-zA-Z0-9_]+/,
         seq(
@@ -1413,31 +1406,30 @@ module.exports = grammar({
     )),
 
     template_string: $ => seq(
-      token(seq(
-        optional(choice(
-          'j',
-          'js',
-          'json',
-        )),
-        '`',
-      )),
+      token(
+        // choice(
+        //   '{j|',
+          '{js|',
+        //   '{json|',
+        // ),
+      ),
       repeat($._template_string_content),
-      '`'
+      token(
+        // choice(
+        // '|j}',
+        '|js}',
+      //   '|json}',
+      // )
+    ),
     ),
 
     _template_string_content: $ => choice(
       $._template_chars,
       $.template_substitution,
-      choice(
-        alias('\\`', $.escape_sequence),
-        $.escape_sequence,
-      ),
+      $.escape_sequence,
     ),
 
-    template_substitution: $ => choice(
-      seq('$', $.value_identifier),
-      seq('${', $.expression, '}'),
-    ),
+    template_substitution: $ => seq('${', $.expression, '}'),
 
     character: $ => seq(
       "'",
@@ -1485,3 +1477,5 @@ function commaSept(rule) {
 function sep1(delimiter, rule) {
   return seq(rule, repeat(seq(delimiter, rule)))
 }
+
+

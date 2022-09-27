@@ -298,10 +298,6 @@
         "named": true
       },
       {
-        "type": "decorator_statement",
-        "named": true
-      },
-      {
         "type": "expression_statement",
         "named": true
       },
@@ -847,11 +843,19 @@
     "named": true,
     "fields": {},
     "children": {
-      "multiple": true,
-      "required": false,
+      "multiple": false,
+      "required": true,
       "types": [
         {
-          "type": "expression",
+          "type": "string",
+          "named": true
+        },
+        {
+          "type": "tuple",
+          "named": true
+        },
+        {
+          "type": "value_identifier",
           "named": true
         }
       ]
@@ -861,25 +865,6 @@
     "type": "decorator_identifier",
     "named": true,
     "fields": {}
-  },
-  {
-    "type": "decorator_statement",
-    "named": true,
-    "fields": {},
-    "children": {
-      "multiple": true,
-      "required": true,
-      "types": [
-        {
-          "type": "decorator_arguments",
-          "named": true
-        },
-        {
-          "type": "decorator_identifier",
-          "named": true
-        }
-      ]
-    }
   },
   {
     "type": "else_clause",
@@ -1881,6 +1866,10 @@
           "named": true
         },
         {
+          "type": "let_custom",
+          "named": true
+        },
+        {
           "type": "list_pattern",
           "named": true
         },
@@ -1904,6 +1893,21 @@
           "type": "unit",
           "named": true
         },
+        {
+          "type": "value_identifier",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "let_custom",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": false,
+      "required": true,
+      "types": [
         {
           "type": "value_identifier",
           "named": true
@@ -3194,10 +3198,6 @@
         {
           "type": "expression",
           "named": true
-        },
-        {
-          "type": "value_identifier",
-          "named": true
         }
       ]
     }
@@ -3748,14 +3748,6 @@
     "named": false
   },
   {
-    "type": "#",
-    "named": false
-  },
-  {
-    "type": "$",
-    "named": false
-  },
-  {
     "type": "${",
     "named": false
   },
@@ -3896,10 +3888,6 @@
     "named": false
   },
   {
-    "type": "@@",
-    "named": false
-  },
-  {
     "type": "[",
     "named": false
   },
@@ -4008,6 +3996,10 @@
     "named": false
   },
   {
+    "type": "let.",
+    "named": false
+  },
+  {
     "type": "module",
     "named": false
   },
@@ -4084,6 +4076,10 @@
     "named": false
   },
   {
+    "type": "{js|",
+    "named": false
+  },
+  {
     "type": "|",
     "named": false
   },
@@ -4093,6 +4089,10 @@
   },
   {
     "type": "|]",
+    "named": false
+  },
+  {
+    "type": "|js}",
     "named": false
   },
   {
