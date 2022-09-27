@@ -29,4 +29,4 @@ Install the newly available parser:
 
 ## Contributing
 
-This is a technical repo containing a copy of the upstream [Reason parser for Tree-sitter](https://github.com/IwanKaramazow/tree-sitter-reason). Please, open issues and PR’s there. Unless the problem is indeed related to the plugin wrapping.
+This is a technical repo containing a copy of the upstream [Reason parser for Tree-sitter](https://github.com/danielo515/tree-sitter-reason). Please, open issues and PR’s there. Unless the problem is indeed related to the plugin wrapping.
