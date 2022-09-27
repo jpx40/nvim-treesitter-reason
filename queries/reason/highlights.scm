@@ -10,13 +10,15 @@
 [
   (type_identifier)
   (unit_type)
-  (list "list{")
-  (list_pattern "list{")
 ] @type
 
+
+(list "[" @type)
+(list_pattern "[" @type)
+
 ; To ensure that the closing curly bracket is the same color (scope) as the opening curly bracket
-(list "}" @type (#set! "priority" 105))
-(list_pattern "}" @type (#set! "priority" 105))
+(list "]" @type (#set! "priority" 105))
+(list_pattern "]" @type (#set! "priority" 105))
 
 [
   (variant_identifier)
@@ -77,9 +79,9 @@
 ;-----
 
 [
- "@"
- "@@"
+ "[@"
  (decorator_identifier)
+ "]"
 ] @annotation
 
 (extension_identifier) @keyword
@@ -89,7 +91,7 @@
 ;-----
 
 (subscript_expression index: (string) @property)
-(polyvar_type_pattern "#" @constant)
+(polyvar_type_pattern "`" @constant)
 
 [
   ("include")
@@ -110,6 +112,8 @@
   "assert"
   "async"
   "await"
+  "with"
+  "unpack"
 ] @keyword
 
 [
@@ -150,6 +154,7 @@
   "-"
   "-."
   "*"
+  "**"
   "*."
   "/."
   "<="
@@ -180,6 +185,8 @@
   "}"
   "["
   "]"
+  "[|"
+  "|]"
 ] @punctuation.bracket
 
 (polyvar_type
@@ -188,6 +195,8 @@
    "[>"
    "[<"
    "]"
+  "[|"
+  "|]"
   ] @punctuation.bracket)
 
 [

@@ -1,12 +1,13 @@
 module.exports = grammar({
-  name: 'rescript',
+  name: 'reason',
 
   externals: $ => [
     $._newline,
     $.comment,
     $._newline_and_comment,
     '"',
-    "`",
+    '|js}',
+    '{js|',
     $._template_chars,
     $._lparen,
     $._rparen,
@@ -34,6 +35,7 @@ module.exports = grammar({
       $.spread_element,
       $.await_expression,
       'binary_times',
+      'binary_pow',
       'binary_plus',
       'binary_compare',
       'binary_relation',
@@ -70,6 +72,7 @@ module.exports = grammar({
     [$.record_field, $.record_pattern],
     [$.expression_statement, $.ternary_expression],
     [$._type_declaration],
+    [$._let_binding],
     [$.let_binding, $.ternary_expression],
     [$.variant_identifier, $.module_identifier],
     [$.variant],
@@ -87,7 +90,10 @@ module.exports = grammar({
     [$._simple_extension],
     [$._inline_type, $.function_type_parameters],
     [$.primary_expression, $.parameter, $._pattern],
-    [$.parameter, $._pattern]
+    [$.parameter, $._pattern],
+    [$.parameter, $._parenthesized_pattern],
+    [$._switch_value_pattern, $._parenthesized_pattern],
+    [$.variant_declaration]
   ],
 
   rules: {
@@ -115,11 +121,9 @@ module.exports = grammar({
 
     statement: $ => choice(
       alias($._decorated_statement, $.decorated),
-      $.decorator_statement,
       $.expression_statement,
       $.declaration,
       $.open_statement,
-      $.assert_statement,
       $.include_statement,
     ),
 
@@ -128,11 +132,6 @@ module.exports = grammar({
       $.declaration,
     ),
 
-    decorator_statement: $ => seq(
-      '@@',
-      $.decorator_identifier,
-      optional($.decorator_arguments)
-    ),
 
     block: $ => prec.right(seq(
       '{',
@@ -148,7 +147,7 @@ module.exports = grammar({
 
     include_statement: $ => seq(
       'include',
-      $.module_expression,
+      choice($.module_expression, seq('(', $.module_expression, ')')),
     ),
 
     declaration: $ => choice(
@@ -163,7 +162,7 @@ module.exports = grammar({
       'module',
       optional('rec'),
       optional('type'),
-      field('name', $.module_identifier),
+      field('name', choice($.module_identifier, $._type_identifier)),
       optional(seq(
         ':',
         field('signature', choice($.block, $.module_expression, $.functor)),
@@ -180,6 +179,8 @@ module.exports = grammar({
       $.functor,
       $.extension_expression,
     ),
+
+    module_unpack: $ => seq('unpack', $.call_arguments),
 
     functor: $ => seq(
       field('parameters', $.functor_parameters),
@@ -236,17 +237,28 @@ module.exports = grammar({
         choice('=', '+='),
         optional('private'),
         $._type,
-        optional(seq(
-          'and',
-          $._type_declaration
-        )),
+        repeat(alias($._type_declaration_and, $.type_declaration)),
       )),
     ),
 
+    _type_declaration_and: $ => seq(
+      // New line here not necessary terminates the statement,
+      // show this doubt to the parser
+      repeat($._newline),
+      repeat($.decorator),
+      'and',
+      $._type_declaration
+    ),
+
     type_parameters: $ => seq(
-      '<',
-      commaSep1t($.type_identifier),
-      '>',
+      '(',
+      commaSep1t(
+        seq(
+          optional(choice('+', '-')),
+          $.type_identifier
+        )
+      ),
+      ')',
     ),
 
     type_annotation: $ => seq(
@@ -273,6 +285,17 @@ module.exports = grammar({
       $.object_type,
       $.generic_type,
       $.unit_type,
+      $.module_pack_type,
+    ),
+
+    module_pack_type: $ => seq(
+      'module',
+      '(',
+      choice($.module_identifier, $._type_identifier),
+      optional(
+        seq('with', sep1('and', seq('type', $._type_identifier, '=', $._type_identifier)))
+      ),
+      ')'
     ),
 
     tuple_type: $ => prec.dynamic(-1, seq(
@@ -287,7 +310,7 @@ module.exports = grammar({
     )),
 
     variant_declaration: $ => prec.right(seq(
-      optional($.decorator),
+      repeat($.decorator),
       $.variant_identifier,
       optional($.variant_parameters),
       optional($.type_annotation),
@@ -367,9 +390,9 @@ module.exports = grammar({
     ),
 
     type_arguments: $ => seq(
-      '<',
+      '(',
       commaSep1t($._type),
-      '>'
+      ')'
     ),
 
     function_type: $ => prec.left(seq(
@@ -399,8 +422,10 @@ module.exports = grammar({
       ),
     ),
 
+    let_custom: $ => seq('let.', $.value_identifier),
+
     let_binding: $ => seq(
-      choice('export', 'let'),
+      choice('export', 'let', $.let_custom),
       optional('rec'),
       $._let_binding,
     ),
@@ -412,11 +437,17 @@ module.exports = grammar({
         '=',
         repeat($.decorator),
         $.expression,
-        optional(seq(
-          'and',
-          $._let_binding,
-        )),
+        repeat(alias($._let_binding_and, $.let_binding)),
       )),
+    ),
+
+    _let_binding_and: $ => seq(
+      // New line here not necessary terminates the statement,
+      // show this doubt to the parser
+      repeat($._newline),
+      repeat($.decorator),
+      'and',
+      $._let_binding,
     ),
 
     _binding_pattern: $ => choice(
@@ -425,6 +456,7 @@ module.exports = grammar({
       $.record_pattern,
       $.array_pattern,
       $.list_pattern,
+      $.module_unpack_pattern,
       $.unit
     ),
 
@@ -443,6 +475,7 @@ module.exports = grammar({
       $.mutation_expression,
       $.await_expression,
       $.block,
+      $.assert_expression,
     ),
 
     primary_expression: $ => choice(
@@ -471,6 +504,7 @@ module.exports = grammar({
       $.pipe_expression,
       $.subscript_expression,
       $.member_expression,
+      $.module_pack_expression,
       $.extension_expression,
     ),
 
@@ -494,6 +528,7 @@ module.exports = grammar({
         $._definition_signature
       ),
       '=>',
+      repeat($.decorator),
       field('body', $.expression),
     )),
 
@@ -566,15 +601,15 @@ module.exports = grammar({
     ),
 
     array: $ => seq(
-      '[',
+      '[|',
       commaSept($.expression),
-      ']'
+      '|]'
     ),
 
     list: $ => seq(
-      'list{',
+      '[',
       optional(commaSep1t($._list_element)),
-      '}'
+      ']'
     ),
 
     _list_element: $ => choice(
@@ -652,7 +687,7 @@ module.exports = grammar({
     ),
 
     polyvar_type_pattern: $ => seq(
-      '#',
+      '`',
       '...',
       $._type_identifier,
     ),
@@ -671,11 +706,11 @@ module.exports = grammar({
 
     as_aliasing: $ => prec.left(seq(
       'as',
-      $.value_identifier,
+      $._pattern,
       optional($.type_annotation)
     )),
 
-    assert_statement: $ => seq('assert', $.expression),
+    assert_expression: $ => prec.left(seq('assert', $.expression)),
 
     call_expression: $ => prec('call', seq(
       field('function', $.primary_expression),
@@ -695,6 +730,14 @@ module.exports = grammar({
         $.block,
       ),
     )),
+
+    module_pack_expression: $ => seq(
+      'module',
+      '(',
+      choice($.module_expression, $.block),
+      optional(seq(':', $.module_expression)),
+      ')'
+    ),
 
     call_arguments: $ => seq(
       '(',
@@ -762,7 +805,7 @@ module.exports = grammar({
 
     type_parameter: $ => seq(
       'type',
-      $.type_identifier,
+      repeat1($.type_identifier),
     ),
 
     _labeled_parameter_default_value: $ => seq(
@@ -782,11 +825,14 @@ module.exports = grammar({
         $._literal_pattern,
         $._destructuring_pattern,
         $.polyvar_type_pattern,
-        $.unit
+        $.unit,
+        $._parenthesized_pattern
       )),
       optional($.type_annotation),
       optional($.as_aliasing),
     )),
+
+    _parenthesized_pattern: $ => seq('(', $._pattern, ')'),
 
     _destructuring_pattern: $ => choice(
       $.variant_pattern,
@@ -852,24 +898,29 @@ module.exports = grammar({
     ),
 
     array_pattern: $ => seq(
+      '[|',
+      optional(commaSep1t($._collection_element_pattern)),
+      '|]',
+    ),
+
+    list_pattern: $ => seq(
       '[',
       optional(commaSep1t($._collection_element_pattern)),
       ']',
     ),
 
-    list_pattern: $ => seq(
-      'list{',
-      optional(commaSep1t($._collection_element_pattern)),
-      '}',
-    ),
-
     _collection_element_pattern: $ => seq(
       choice($._pattern, $.spread_pattern),
+      optional($.as_aliasing)
     ),
 
     spread_pattern: $ => seq(
       '...',
-      $.value_identifier,
+      choice($.value_identifier, $.list_pattern, $.array_pattern),
+    ),
+
+    module_unpack_pattern: $ => seq(
+      'module', '(', $.module_identifier, ')',
     ),
 
     _jsx_element: $ => choice($.jsx_element, $.jsx_self_closing_element),
@@ -978,16 +1029,13 @@ module.exports = grammar({
     ),
 
     decorator: $ => seq(
-      '@',
+      '[@',
       $.decorator_identifier,
-      optional($.decorator_arguments)
+      optional($.decorator_arguments),
+      ']'
     ),
 
-    decorator_arguments: $ => seq(
-      '(',
-      commaSept($.expression),
-      ')',
-    ),
+    decorator_arguments: $ => choice($.string, $.tuple, $.value_identifier),
 
     subscript_expression: $ => prec.right('member', seq(
       field('object', $.primary_expression),
@@ -1041,6 +1089,7 @@ module.exports = grammar({
         ['-.', 'binary_plus'],
         ['*', 'binary_times'],
         ['*.', 'binary_times'],
+        ['**', 'binary_pow'],
         ['/', 'binary_times'],
         ['/.', 'binary_times'],
         ['<', 'binary_relation'],
@@ -1192,6 +1241,8 @@ module.exports = grammar({
       $.module_identifier_path,
       $.module_type_of,
       $.functor_use,
+      $.module_type_constraint,
+      $.module_unpack,
     ),
 
     module_identifier_path: $ => prec.left(seq(
@@ -1204,8 +1255,25 @@ module.exports = grammar({
       'module',
       'type',
       'of',
-      $.module_expression,
+      choice($.module_expression, $.block),
     )),
+
+    module_type_constraint: $ => seq(
+      '(',
+      choice($.module_identifier, $.module_identifier_path),
+      ':',
+      $.module_type_of,
+      'with',
+      sep1('and',
+        seq(
+          'module',
+          $.module_expression,
+          choice('=', ':='),
+          $.module_expression
+        )
+      ),
+      ')'
+    ),
 
     functor_use: $ => seq(
       choice(
@@ -1229,7 +1297,7 @@ module.exports = grammar({
     variant_identifier: $ => /[A-Z][a-zA-Z0-9_]*/,
 
     polyvar_identifier: $ => seq(
-      '#',
+      '`',
       choice(
         /[a-zA-Z0-9_]+/,
         seq(
@@ -1338,31 +1406,30 @@ module.exports = grammar({
     )),
 
     template_string: $ => seq(
-      token(seq(
-        optional(choice(
-          'j',
-          'js',
-          'json',
-        )),
-        '`',
-      )),
+      token(
+        // choice(
+        //   '{j|',
+          '{js|',
+        //   '{json|',
+        // ),
+      ),
       repeat($._template_string_content),
-      '`'
+      token(
+        // choice(
+        // '|j}',
+        '|js}',
+      //   '|json}',
+      // )
+    ),
     ),
 
     _template_string_content: $ => choice(
       $._template_chars,
       $.template_substitution,
-      choice(
-        alias('\\`', $.escape_sequence),
-        $.escape_sequence,
-      ),
+      $.escape_sequence,
     ),
 
-    template_substitution: $ => choice(
-      seq('$', $.value_identifier),
-      seq('${', $.expression, '}'),
-    ),
+    template_substitution: $ => seq('${', $.expression, '}'),
 
     character: $ => seq(
       "'",
@@ -1406,3 +1473,9 @@ function commaSep(rule) {
 function commaSept(rule) {
   return optional(commaSep1t(rule));
 }
+
+function sep1(delimiter, rule) {
+  return seq(rule, repeat(seq(delimiter, rule)))
+}
+
+
