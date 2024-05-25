@@ -200,6 +200,10 @@
         "named": true
       },
       {
+        "type": "hash_expression",
+        "named": true
+      },
+      {
         "type": "if_expression",
         "named": true
       },
@@ -1211,7 +1215,7 @@
     "fields": {
       "body": {
         "multiple": false,
-        "required": true,
+        "required": false,
         "types": [
           {
             "type": "expression",
@@ -1256,6 +1260,25 @@
       "types": [
         {
           "type": "decorator",
+          "named": true
+        },
+        {
+          "type": "function_switch",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "function_switch",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": false,
+      "types": [
+        {
+          "type": "switch_match",
           "named": true
         }
       ]
@@ -1422,11 +1445,7 @@
           "named": true
         },
         {
-          "type": "module_identifier",
-          "named": true
-        },
-        {
-          "type": "module_identifier_path",
+          "type": "module_expression",
           "named": true
         }
       ]
@@ -1450,6 +1469,21 @@
         },
         {
           "type": "type_identifier_path",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "hash_expression",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "primary_expression",
           "named": true
         }
       ]
@@ -1850,6 +1884,10 @@
       "required": true,
       "types": [
         {
+          "type": "and_custom",
+          "named": true
+        },
+        {
           "type": "array_pattern",
           "named": true
         },
@@ -1893,21 +1931,6 @@
           "type": "unit",
           "named": true
         },
-        {
-          "type": "value_identifier",
-          "named": true
-        }
-      ]
-    }
-  },
-  {
-    "type": "let_custom",
-    "named": true,
-    "fields": {},
-    "children": {
-      "multiple": false,
-      "required": true,
-      "types": [
         {
           "type": "value_identifier",
           "named": true
@@ -2084,19 +2107,7 @@
         "required": true,
         "types": [
           {
-            "type": "..",
-            "named": false
-          },
-          {
             "type": "module_identifier",
-            "named": true
-          },
-          {
-            "type": "type_identifier",
-            "named": true
-          },
-          {
-            "type": "type_identifier_path",
             "named": true
           }
         ]
@@ -2212,6 +2223,14 @@
       "types": [
         {
           "type": "module_expression",
+          "named": true
+        },
+        {
+          "type": "type_identifier",
+          "named": true
+        },
+        {
+          "type": "type_identifier_path",
           "named": true
         }
       ]
@@ -3748,6 +3767,18 @@
     "named": false
   },
   {
+    "type": "#",
+    "named": false
+  },
+  {
+    "type": "##",
+    "named": false
+  },
+  {
+    "type": "##.",
+    "named": false
+  },
+  {
     "type": "${",
     "named": false
   },
@@ -3924,6 +3955,10 @@
     "named": false
   },
   {
+    "type": "and_custom",
+    "named": true
+  },
+  {
     "type": "as",
     "named": false
   },
@@ -3980,6 +4015,10 @@
     "named": false
   },
   {
+    "type": "fun",
+    "named": false
+  },
+  {
     "type": "if",
     "named": false
   },
@@ -3996,8 +4035,8 @@
     "named": false
   },
   {
-    "type": "let.",
-    "named": false
+    "type": "let_custom",
+    "named": true
   },
   {
     "type": "module",
