@@ -128,9 +128,9 @@ static bool is_identifier_start(char c) {
   return c == '_' || (c >= 'a' && c <= 'z');
 }
 
-const char *bool_to_str(bool b) { return b ? "true" : "false"; };
-const char js_string_open_chars[] = "{js|";
-const char js_string_close_chars[] = "|js}";
+static const char *bool_to_str(bool b) { return b ? "true" : "false"; };
+static const char js_string_open_chars[] = "{js|";
+static const char js_string_close_chars[] = "|js}";
 
 static bool is_js_string_delimiter(TSLexer *lexer, bool useClose) {
   lexer->mark_end(lexer); // prevent chars from being consumed unless called
